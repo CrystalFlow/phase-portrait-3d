@@ -2,5 +2,6 @@ numpy>=1.26
 scipy>=1.12
 plotly>=5.20
 ipywidgets>=8.1
+anywidget>=0.9
 jupyterlab>=4.1
 nbformat>=4.2.0
