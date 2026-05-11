@@ -8,13 +8,6 @@ import numpy as np
 import plotly.graph_objects as go
 
 
-# Matplotlib colormap names → Plotly colorscale names
-_COLORSCALE_MAP = {
-    'plasma': 'plasma', 'viridis': 'viridis',
-    'inferno': 'inferno', 'magma': 'magma',
-    'cividis': 'cividis',
-}
-
 
 def plot_phase_portrait(
     trajectories,
@@ -43,7 +36,7 @@ def plot_phase_portrait(
         pre-normalized to [0, 1] by colormap_utils.
         If None, trajectories are plotted in a single default color.
     colormap : str
-        Colormap name — 'plasma', 'viridis', 'inferno', 'magma', or 'cividis'.
+        Any Plotly colorscale name (e.g. 'plasma', 'viridis', 'inferno').
     eigvec_scale : float
         Length of eigenvector ray in each direction from the origin.
     eigenplane_scale : float
@@ -57,7 +50,6 @@ def plot_phase_portrait(
     -------
     plotly.graph_objects.Figure
     """
-    colorscale = _COLORSCALE_MAP.get(colormap, 'plasma')
     traces = []
 
     # --- Trajectories ---
@@ -65,22 +57,15 @@ def plot_phase_portrait(
         cv = color_values[idx] if color_values is not None else None
 
         if cv is not None:
-            colorbar_cfg = dict(
-                title='‖x′(t)‖<br>(normalized)',
-                thickness=15,
-                len=0.6,
-            ) if (idx == 0 and show_colorbar) else None
-
+            line_cfg = dict(color=cv, colorscale=colormap, width=3, cmin=0, cmax=1)
+            if idx == 0 and show_colorbar:
+                line_cfg['colorbar'] = dict(
+                    title='‖x′(t)‖<br>(normalized)', thickness=15, len=0.6,
+                )
             traces.append(go.Scatter3d(
                 x=xyz[0], y=xyz[1], z=xyz[2],
                 mode='lines',
-                line=dict(
-                    color=cv,
-                    colorscale=colorscale,
-                    width=3,
-                    cmin=0, cmax=1,
-                    colorbar=colorbar_cfg,
-                ),
+                line=line_cfg,
                 showlegend=False,
             ))
         else:

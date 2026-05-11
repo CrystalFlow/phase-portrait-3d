@@ -25,7 +25,7 @@ def _compute_raw(A, xyz, t, quantity):
     if quantity == 'speed':
         return np.linalg.norm(A @ xyz, axis=0)
     elif quantity == 'time':
-        return t.copy()
+        return t
     elif quantity == 'distance':
         return np.linalg.norm(xyz, axis=0)
     else:
@@ -34,6 +34,11 @@ def _compute_raw(A, xyz, t, quantity):
 
 def compute_color_values(A, xyz, t, quantity='speed'):
     """
+    Compute normalized color values for a single trajectory (local normalization).
+
+    Note: normalization is per-trajectory; results are not comparable across
+    multiple trajectories. Use compute_color_values_many for global normalization.
+
     Returns
     -------
     ndarray (N,), values in [0, 1]
@@ -59,8 +64,8 @@ def compute_color_values_many(A, trajectories, quantity='speed'):
     """
     A = np.asarray(A, dtype=float)
     raw_list = [_compute_raw(A, xyz, t, quantity) for t, xyz in trajectories]
-    global_min = min(r.min() for r in raw_list)
-    global_max = max(r.max() for r in raw_list)
+    all_raw = np.concatenate(raw_list)
+    global_min, global_max = all_raw.min(), all_raw.max()
     return [_normalize(r, global_min, global_max) for r in raw_list]
 
 
