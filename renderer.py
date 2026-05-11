@@ -21,6 +21,7 @@ def plot_phase_portrait(
     eigen_info=None,
     color_values=None,
     colormap='plasma',
+    line_color=None,
     eigvec_scale=3.0,
     eigenplane_scale=3.0,
     show_eigenvectors=True,
@@ -86,7 +87,7 @@ def plot_phase_portrait(
             traces.append(go.Scatter3d(
                 x=xyz[0], y=xyz[1], z=xyz[2],
                 mode='lines',
-                line=dict(width=3),
+                line=dict(width=3, color=line_color),
                 showlegend=False,
             ))
 

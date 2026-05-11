@@ -9,35 +9,36 @@ equilibria and along unstable eigendirections.
 import numpy as np
 
 
-def compute_color_values(A, xyz, t, quantity='speed'):
+def _compute_raw(A, xyz, t, quantity):
     """
-    Compute normalized color values for a single trajectory.
-
     Parameters
     ----------
-    A        : ndarray, shape (3, 3)
-    xyz      : ndarray, shape (3, N) — trajectory positions
-    t        : ndarray, shape (N,)   — time points
+    A        : ndarray (3, 3)
+    xyz      : ndarray (3, N) — trajectory positions
+    t        : ndarray (N,)   — time points
     quantity : 'speed' | 'time' | 'distance'
 
     Returns
     -------
-    ndarray, shape (N,), values in [0, 1]
+    ndarray (N,), unnormalized scalar values
     """
-    A = np.asarray(A, dtype=float)
-
     if quantity == 'speed':
-        # ‖Ax(t)‖ at each point — instantaneous velocity magnitude
-        vel = A @ xyz          # (3, N)
-        raw = np.linalg.norm(vel, axis=0)  # (N,)
+        return np.linalg.norm(A @ xyz, axis=0)
     elif quantity == 'time':
-        raw = t.copy()
+        return t.copy()
     elif quantity == 'distance':
-        raw = np.linalg.norm(xyz, axis=0)  # (N,)
+        return np.linalg.norm(xyz, axis=0)
     else:
         raise ValueError(f"Unknown quantity '{quantity}'. Use 'speed', 'time', or 'distance'.")
 
-    return _normalize(raw)
+
+def compute_color_values(A, xyz, t, quantity='speed'):
+    """
+    Returns
+    -------
+    ndarray (N,), values in [0, 1]
+    """
+    return _normalize(_compute_raw(np.asarray(A, dtype=float), xyz, t, quantity))
 
 
 def compute_color_values_many(A, trajectories, quantity='speed'):
@@ -48,8 +49,8 @@ def compute_color_values_many(A, trajectories, quantity='speed'):
 
     Parameters
     ----------
-    A            : ndarray, shape (3, 3)
-    trajectories : list of (t, xyz) pairs
+    A            : ndarray (3, 3)
+    trajectories : list of (t, xyz) pairs — one per initial condition
     quantity     : 'speed' | 'time' | 'distance'
 
     Returns
@@ -57,23 +58,9 @@ def compute_color_values_many(A, trajectories, quantity='speed'):
     list of ndarray, each shape (N,), values in [0, 1]
     """
     A = np.asarray(A, dtype=float)
-
-    raw_list = []
-    for t, xyz in trajectories:
-        if quantity == 'speed':
-            vel = A @ xyz
-            raw_list.append(np.linalg.norm(vel, axis=0))
-        elif quantity == 'time':
-            raw_list.append(t.copy())
-        elif quantity == 'distance':
-            raw_list.append(np.linalg.norm(xyz, axis=0))
-        else:
-            raise ValueError(f"Unknown quantity '{quantity}'.")
-
-    # Global min/max so trajectories share the same color scale
+    raw_list = [_compute_raw(A, xyz, t, quantity) for t, xyz in trajectories]
     global_min = min(r.min() for r in raw_list)
     global_max = max(r.max() for r in raw_list)
-
     return [_normalize(r, global_min, global_max) for r in raw_list]
 
 
